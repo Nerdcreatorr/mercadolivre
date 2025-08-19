@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Pacotes e Paradas - ML Deluna</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Fundo escuro */
+            color: #e0e0e0; /* Cor do texto clara */
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e; /* Fundo do container mais escuro */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 10px;
+            width: 250px; /* Ajuste o tamanho da imagem conforme necessário */
+            max-width: 100%; /* Garante que a imagem seja responsiva */
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff; /* Título branco */
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+        h2 {
+            text-align: center;
+            color: #ffffff;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            background-color: #2a2a2a; /* Fundo das abas inativas */
+            border: 1px solid #444;
+            border-bottom: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px 5px 0 0;
+            color: #e0e0e0;
+        }
+        .tab-button.active {
+            background-color: #3e5c9b; /* Azul da aba ativa */
+            color: white;
+            border-color: #3e5c9b;
+        }
+        .tab-content {
+            display: none;
+            padding-top: 20px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .form-paradas {
+            justify-content: center;
+        }
+        input, button {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #2a2a2a; /* Fundo dos inputs escuro */
+            color: #e0e0e0;
+        }
+        button {
+            background-color: #3e5c9b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #4b68a7;
+        }
+        .form-paradas input {
+            max-width: 250px;
+        }
+        .form-paradas button {
+            max-width: 250px;
+        }
+        .total-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .total-info {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .total-value {
+            color: #6a9bd2;
+        }
+        .total-insucesso {
+            color: #dc3545; /* Cor vermelha para insucesso */
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px; /* Altura reduzida para as células */
+            border-bottom: 1px solid #444;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #3e5c9b;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        /* Ajuste das larguras para a tabela de Pacotes */
+        #recordsTable th:nth-child(1),
+        #recordsTable td:nth-child(1) { width: 20%; }
+        #recordsTable th:nth-child(2),
+        #recordsTable td:nth-child(2) { width: 15%; }
+        #recordsTable th:nth-child(3),
+        #recordsTable td:nth-child(3) { width: 30%; }
+        #recordsTable th:nth-child(4),
+        #recordsTable td:nth-child(4) { width: 15%; text-align: center; }
+        #recordsTable th:nth-child(5),
+        #recordsTable td:nth-child(5) { width: 20%; text-align: right; }
+
+        /* Ajuste das larguras para a tabela de Paradas */
+        #stopsTable th:nth-child(1),
+        #stopsTable td:nth-child(1) { width: 15%; }
+        #stopsTable th:nth-child(2),
+        #stopsTable td:nth-child(2) { width: 10%; text-align: center; }
+        #stopsTable th:nth-child(3),
+        #stopsTable td:nth-child(3) { width: 65%; } /* Observação */
+        #stopsTable th:nth-child(4),
+        #stopsTable td:nth-child(4) { width: 10%; text-align: right; } /* Ações */
+        
+        .actions {
+            display: flex;
+            gap: 5px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .edit-btn, .delete-btn, .add-btn {
+            padding: 6px 4px; /* Reduzindo o padding horizontal */
+            border-radius: 3px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            font-weight: bold;
+        }
+        .add-btn {
+            background-color: #28a745;
+        }
+        .edit-btn {
+            background-color: #007bff;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+        }
+        .observation-field {
+            width: 100%;
+            min-height: 30px; /* Altura mínima reduzida */
+            box-sizing: border-box;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 8px;
+            font-family: Arial, sans-serif;
+            resize: vertical;
+            transition: background-color 0.3s ease; /* Transição suave */
+        }
+        .filled-observation {
+            background-color: #4a2c2c; /* Cor de fundo avermelhada */
+        }
+        #total-date-filter {
+            text-align: right;
+        }
+        /* Estilos específicos para a aba de Paradas */
+        .stop-row.completed {
+            background-color: #2a3a2a; /* Fundo verde para linhas concluídas */
+            opacity: 0.8;
+            text-decoration: line-through;
+        }
+        .stop-row.completed td {
+            color: #a0a0a0; /* Cor do texto mais clara para indicar conclusão */
+        }
+        .completed-checkbox {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .button-group button {
+            flex: 1;
+            min-width: 120px;
+        }
+        .hidden-file-input {
+            display: none;
+        }
+        .record-row {
+            cursor: pointer; /* Adiciona o cursor de clique na linha */
+        }
+
+        @media (max-width: 600px) {
+            .company-name {
+                font-size: 1.4em;
+            }
+            h1 {
+                font-size: 1.2em;
+            }
+            .total-container {
+                font-size: 1em;
+                padding: 8px;
+            }
+            input, button {
+                font-size: 14px;
+                padding: 10px;
+            }
+            table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 8px;
+            }
+            #recordsTable th:nth-child(1), #recordsTable td:nth-child(1),
+            #recordsTable th:nth-child(2), #recordsTable td:nth-child(2),
+            #recordsTable th:nth-child(3), #recordsTable td:nth-child(3),
+            #recordsTable th:nth-child(4), #recordsTable td:nth-child(4),
+            #recordsTable th:nth-child(5), #recordsTable td:nth-child(5) { width: auto; }
+
+            #stopsTable th:nth-child(1), #stopsTable td:nth-child(1),
+            #stopsTable th:nth-child(2), #stopsTable td:nth-child(2),
+            #stopsTable th:nth-child(3), #stopsTable td:nth-child(3),
+            #stopsTable th:nth-child(4), #stopsTable td:nth-child(4) { width: auto; }
+            
+            .edit-btn, .delete-btn, .add-btn {
+                padding: 4px 6px;
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="IMG_20250816_204625.jpg" alt="Logo ML Deluna" class="logo">
+        <h1>Registros</h1>
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab('pacotes')">Pacotes</button>
+            <button class="tab-button" onclick="openTab('paradas')">Paradas</button>
+        </div>
+        <div id="pacotes" class="tab-content active">
+            <div class="form">
+                <input type="date" id="date-pacotes" required>
+                <input type="number" id="quantity-pacotes" placeholder="Quantidade de Pacotes" required min="0">
+                <input type="text" id="route-pacotes" placeholder="Rota" required>
+                <input type="text" id="driver-pacotes" list="driver-list" placeholder="Nome do Motorista" required>
+                <datalist id="driver-list"></datalist>
+                <button onclick="addOrUpdateRecord()">Adicionar</button>
+            </div>
+            <div class="button-group">
+                <button onclick="exportData()">Exportar Dados</button>
+                <button onclick="document.getElementById('file-input').click()">Importar Dados</button>
+                <input type="file" id="file-input" accept=".json" class="hidden-file-input" onchange="importData(event)">
+            </div>
+            <div class="total-container">
+                <div class="total-info">Total de pacotes: <span id="totalPackagesCount" class="total-value">0</span></div>
+                <input type="date" id="total-date-filter">
+            </div>
+            <div class="table-container">
+                <table id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Rota</th>
+                            <th>Motorista</th>
+                            <th>QTD</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="paradas" class="tab-content">
+            <div class="form form-paradas">
+                <input type="number" id="stopNumber" placeholder="Número da Parada" required min="1">
+                <input type="number" id="quantity-paradas" placeholder="Quantidade de Pacotes" required min="0">
+                <button id="saveStopBtn" onclick="saveStopRecord()">Salvar Parada</button>
+            </div>
+            <div class="button-group">
+                <button id="finishRouteBtn" onclick="finishRoute()">Finalizar Rota</button>
+            </div>
+            <div class="total-container">
+                <div class="total-info">Quantidade total: <span id="totalStopsCount" class="total-value">0</span></div>
+            </div>
+            <div class="table-container">
+                <table id="stopsTable">
+                    <thead>
+                        <tr>
+                            <th>Parada</th>
+                            <th>QTD</th>
+                            <th>Observação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stopsTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="routeDetails" class="tab-content">
+            <h2>Detalhes da Rota: <span id="routeDetailsTitle"></span></h2>
+            <div class="total-container">
+                <div class="total-info">Total de pacotes: <span id="totalRouteDetailsCount" class="total-value">0</span></div>
+                <div class="total-info">Total de insucessos: <span id="totalInsucessoCount" class="total-value total-insucesso">0</span></div>
+            </div>
+            <div class="table-container">
+                <table id="detailsTable">
+                    <thead>
+                        <tr>
+                            <th>Parada</th>
+                            <th>QTD</th>
+                            <th>Observação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routeDetailsTableBody">
+                        </tbody>
+                </table>
+            </div>
+            <button onclick="hideRouteDetails()">Voltar</button>
+        </div>
+    </div>
+    
+    <script>
+        // Lógica para alternar as abas
+        function openTab(tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            
+            // Verifica se o evento de clique existe para evitar erro
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            } else {
+                // Se não houver evento, encontra e ativa o botão manualmente
+                const button = document.querySelector(`.tab-button[onclick*="openTab('${tabName}')"]`);
+                if (button) {
+                    button.classList.add('active');
+                }
+            }
+        }
+
+        // Lógica para o Registro de Pacotes
+        let records = JSON.parse(localStorage.getItem('records')) || [];
+        let editIndex = -1;
+        const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        function formatDate(dateString) {
+            const date = new Date(dateString + 'T00:00:00');
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = monthNames[date.getMonth()];
+            const dayOfWeek = dayNames[date.getDay()];
+            return `${day} ${month}<br>(${dayOfWeek})`;
+        }
+        function populateDriverDatalist() {
+            const driverList = document.getElementById('driver-list');
+            driverList.innerHTML = '';
+            
+            // Lista fixa de nomes de motoristas
+            const existingDrivers = [
+                'Wagner',
+                'Fabrício Junho',
+                'Luciane',
+                'Tiago',
+                'Apolo',
+                'Anselmo Soares',
+                'Felipe Ramos',
+                'Fábio Sousa',
+                'Marllon Y',
+                'Renato Salustiano',
+                'Jefferson cruz',
+                'ISAAC',
+                'Fábio Imbá',
+                'Renato Mattos',
+                'Juan Cavalcante',
+                'Felipe Quaresma',
+                'Emanoel',
+                'Tais',
+                'Jonathan vilar',
+                'William Rastelli',
+                'Mônica',
+                'Pablo Henrique',
+                'Douglas',
+                'Izael',
+                'Fabio silva',
+                'Fabiola',
+                'Francisco A',
+                'Lorran',
+                'Jonh Jonh',
+                'Marcos F',
+                'Matheus M',
+                'Ludimila',
+                'José',
+                'Felipe.A'
+            ];
+            const newDrivers = [
+                'ROGER P',
+                'Felipe.A',
+                'MATEUS',
+                'Renato Salustiano',
+                'Jhonatan',
+                'Matheus M',
+                'renan M',
+                'ISAAC',
+                'Jonh Jonh',
+                'Leandro de Jesus',
+                'Pablo F',
+                'Luciane',
+                'Tatiany',
+                'Marcos F',
+                'Daniel',
+                'ruth',
+                'Romarioooooo'
+            ];
+            
+            const allDrivers = [...new Set([...existingDrivers, ...newDrivers])].sort();
+
+            allDrivers.forEach(driver => {
+                const option = document.createElement('option');
+                option.value = driver;
+                driverList.appendChild(option);
+            });
+        }
+        function calculateTotalByDate(selectedDate) {
+            if (!selectedDate) {
+                const total = records.reduce((sum, record) => sum + Number(record.quantity), 0);
+                document.getElementById('totalPackagesCount').textContent = total;
+                return;
+            }
+            const total = records.filter(record => record.date === selectedDate).reduce((sum, record) => sum + Number(record.quantity), 0);
+            document.getElementById('totalPackagesCount').textContent = total;
+        }
+        function loadRecords() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            records.forEach((record, index) => {
+                const row = document.createElement('tr');
+                row.classList.add('record-row');
+                
+                // Adiciona o evento de clique na linha
+                row.onclick = () => showRouteDetails(record.date, record.route);
+
+                row.innerHTML = `
+                    <td>${formatDate(record.date)}</td>
+                    <td>${record.route || record.initials || ''}</td>
+                    <td>${record.driver}</td>
+                    <td><b>${record.quantity}</b></td>
+                    <td class="actions">
+                        <button class="add-btn" onclick="event.stopPropagation(); addQuantity(${index});">+</button>
+                        <button class="edit-btn" onclick="event.stopPropagation(); editRecord(${index});">E</button>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteRecord(${index});">-</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            calculateTotalByDate(document.getElementById('total-date-filter').value);
+            populateDriverDatalist();
+        }
+        function addOrUpdateRecord() {
+            const date = document.getElementById('date-pacotes').value;
+            const quantity = document.getElementById('quantity-pacotes').value;
+            const route = document.getElementById('route-pacotes').value;
+            const driver = document.getElementById('driver-pacotes').value;
+            if (!date || !quantity || !route || !driver) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+            const record = { date, quantity: Number(quantity), route, driver };
+            if (editIndex === -1) {
+                records.unshift(record);
+            } else {
+                records[editIndex] = record;
+                editIndex = -1;
+            }
+            localStorage.setItem('records', JSON.stringify(records));
+            loadRecords();
+            clearFormPacotes();
+        }
+        function editRecord(index) {
+            const record = records[index];
+            document.getElementById('date-pacotes').value = record.date;
+            document.getElementById('quantity-pacotes').value = record.quantity;
+            document.getElementById('route-pacotes').value = record.route || record.initials || '';
+            document.getElementById('driver-pacotes').value = record.driver;
+            editIndex = index;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function addQuantity(index) {
+            const quantityToAdd = prompt("Quantos pacotes você deseja somar?");
+            if (quantityToAdd !== null && !isNaN(quantityToAdd) && quantityToAdd !== "") {
+                records[index].quantity = Number(records[index].quantity) + Number(quantityToAdd);
+                localStorage.setItem('records', JSON.stringify(records));
+                loadRecords();
+            } else if (quantityToAdd !== null) {
+                alert("Por favor, insira um número válido.");
+            }
+        }
+        function clearFormPacotes() {
+            document.getElementById('date-pacotes').value = '';
+            document.getElementById('quantity-pacotes').value = '';
+            document.getElementById('route-pacotes').value = '';
+            document.getElementById('driver-pacotes').value = '';
+        }
+        function deleteRecord(index) {
+            if (confirm('Tem certeza que deseja excluir este registro?')) {
+                records.splice(index, 1);
+                localStorage.setItem('records', JSON.stringify(records));
+                loadRecords();
+            }
+        }
+        document.getElementById('total-date-filter').addEventListener('change', (e) => {
+            calculateTotalByDate(e.target.value);
+        });
+
+        // Lógica para o Registro de Paradas
+        let stops = JSON.parse(localStorage.getItem('stops')) || [];
+        let editStopIndex = -1;
+        function saveStopRecord() {
+            const stopNumber = document.getElementById('stopNumber').value;
+            const quantity = document.getElementById('quantity-paradas').value;
+            if (!stopNumber || !quantity) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+            
+            if (editStopIndex === -1) {
+                const record = { stopNumber: Number(stopNumber), quantity: Number(quantity), completed: false, observations: '' };
+                stops.push(record);
+            } else {
+                stops[editStopIndex].stopNumber = Number(stopNumber);
+                stops[editStopIndex].quantity = Number(quantity);
+                editStopIndex = -1;
+                document.getElementById('saveStopBtn').textContent = 'Salvar Parada';
+            }
+            localStorage.setItem('stops', JSON.stringify(stops));
+            loadStopRecords();
+            clearFormParadas();
+        }
+        function loadStopRecords() {
+            const tableBody = document.getElementById('stopsTableBody');
+            tableBody.innerHTML = '';
+            stops.sort((a, b) => a.stopNumber - b.stopNumber);
+
+            stops.forEach((stop, index) => {
+                const row = document.createElement('tr');
+                row.classList.add('stop-row');
+                if (stop.completed) {
+                    row.classList.add('completed');
+                }
+                
+                const observationClass = stop.observations.trim() !== '' ? 'filled-observation' : '';
+                row.innerHTML = `
+                    <td>${stop.stopNumber}</td>
+                    <td><b>${stop.quantity}</b></td>
+                    <td>
+                        <textarea class="observation-field ${observationClass}" oninput="updateObservation(${index}, this.value)">${stop.observations}</textarea>
+                    </td>
+                    <td class="actions">
+                        <input type="checkbox" class="completed-checkbox" ${stop.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleStopCompletion(${index});">
+                        <button class="edit-btn" onclick="event.stopPropagation(); editStopRecord(${index});">E</button>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteStopRecord(${index});">X</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            const total = stops.reduce((sum, stop) => sum + (Number(stop.quantity) || 0), 0);
+            document.getElementById('totalStopsCount').textContent = total;
+        }
+        function toggleStopCompletion(index) {
+            stops[index].completed = !stops[index].completed;
+            localStorage.setItem('stops', JSON.stringify(stops));
+            loadStopRecords();
+        }
+        function updateObservation(index, value) {
+            stops[index].observations = value;
+            localStorage.setItem('stops', JSON.stringify(stops));
+        }
+        function editStopRecord(index) {
+            const record = stops[index];
+            document.getElementById('stopNumber').value = record.stopNumber;
+            document.getElementById('quantity-paradas').value = record.quantity;
+            editStopIndex = index;
+            document.getElementById('saveStopBtn').textContent = 'Atualizar Parada';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function clearFormParadas() {
+            document.getElementById('stopNumber').value = '';
+            document.getElementById('quantity-paradas').value = '';
+        }
+        function deleteStopRecord(index) {
+            if (confirm('Tem certeza que deseja excluir este registro?')) {
+                stops.splice(index, 1);
+                localStorage.setItem('stops', JSON.stringify(stops));
+                loadStopRecords();
+            }
+        }
+        
+        function finishRoute() {
+            if (stops.length === 0) {
+                alert('Não há paradas para finalizar.');
+                return;
+            }
+
+            const routeName = prompt('Digite o nome da rota a ser finalizada:');
+            if (!routeName) {
+                alert('A finalização da rota foi cancelada.');
+                return;
+            }
+
+            const recordToUpdate = records.find(record => record.route.toLowerCase() === routeName.toLowerCase());
+            
+            if (!recordToUpdate) {
+                alert('Rota não encontrada. Verifique se o nome está correto.');
+                return;
+            }
+
+            // Armazena os detalhes das paradas como um array de objetos
+            recordToUpdate.stopDetails = stops.map(stop => {
+                // Agora, a parada é considerada insucesso se não estiver concluída OU tiver a palavra 'insucesso'
+                const isFailed = !stop.completed || stop.observations.toLowerCase().includes('insuc');
+                return {
+                    stopNumber: stop.stopNumber,
+                    quantity: stop.quantity,
+                    observations: stop.observations,
+                    isFailed: isFailed
+                };
+            });
+            
+            // Salva os dados atualizados no localStorage
+            localStorage.setItem('records', JSON.stringify(records));
+            
+            // Limpa a lista de paradas
+            stops = [];
+            localStorage.setItem('stops', JSON.stringify(stops));
+            
+            // Recarrega as tabelas
+            loadRecords();
+            loadStopRecords();
+
+            alert(`A rota "${routeName}" foi finalizada e os dados de paradas foram salvos.`);
+        }
+
+        // Lógica para mostrar e esconder os detalhes da rota
+        function showRouteDetails(date, route) {
+            // Esconde todas as abas e ativa apenas a de detalhes
+            openTab('routeDetails');
+            
+            const record = records.find(rec => rec.date === date && rec.route === route);
+
+            // Atualiza o título e o total
+            document.getElementById('routeDetailsTitle').textContent = `${formatDate(record.date)} - Rota: ${record.route}`;
+            document.getElementById('totalRouteDetailsCount').textContent = record.quantity;
+            
+            const detailsTableBody = document.getElementById('routeDetailsTableBody');
+            detailsTableBody.innerHTML = '';
+            
+            // Variável para contar os insucessos
+            let failedCount = 0;
+            
+            if (record.stopDetails && record.stopDetails.length > 0) {
+                // Preenche a tabela com o novo formato de dados
+                record.stopDetails.forEach(stop => {
+                    const row = document.createElement('tr');
+                    
+                    // Se for um insucesso, conta e adiciona uma classe
+                    if (stop.isFailed) {
+                        failedCount++;
+                        row.style.backgroundColor = 'rgba(220, 53, 69, 0.2)'; // Fundo levemente vermelho
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${stop.stopNumber}</td>
+                        <td>${stop.quantity}</td>
+                        <td>${stop.observations || 'N/A'}</td>
+                    `;
+                    detailsTableBody.appendChild(row);
+                });
+            } else if (record.observations) {
+                // Preenche a tabela com o formato antigo de dados
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    <td>${record.observations}</td>
+                `;
+                detailsTableBody.appendChild(row);
+            } else {
+                // Caso não haja dados de parada
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3">Nenhum detalhe de parada para esta rota.</td>`;
+                detailsTableBody.appendChild(row);
+            }
+            
+            // Exibe o total de insucessos
+            document.getElementById('totalInsucessoCount').textContent = failedCount;
+        }
+
+        function hideRouteDetails() {
+            // Apenas chama a função openTab para reativar a aba de pacotes
+            openTab('pacotes');
+        }
+        
+        // Novas funções para importação e exportação
+        function exportData() {
+            const data = {
+                records: records,
+                stops: stops
+            };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dados_deluna.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.records && importedData.stops) {
+                        records = importedData.records;
+                        stops = importedData.stops;
+                        localStorage.setItem('records', JSON.stringify(records));
+                        localStorage.setItem('stops', JSON.stringify(stops));
+                        loadRecords();
+                        loadStopRecords();
+                        alert('Dados importados com sucesso!');
+                    } else {
+                        alert('Formato de arquivo JSON inválido. Por favor, selecione um arquivo válido.');
+                    }
+                } catch (error) {
+                    alert('Erro ao processar o arquivo. Certifique-se de que é um arquivo JSON válido.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+             const today = new Date().toLocaleDateString('en-CA');
+             document.getElementById('total-date-filter').value = today;
+             document.getElementById('date-pacotes').value = today;
+             loadRecords();
+             loadStopRecords();
+        });
+    </script>
+</body>
+</html>
+
